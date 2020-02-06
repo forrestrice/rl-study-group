@@ -10,6 +10,9 @@ class MovingArm:
         self.action_value += normal(0, 0.01)
         return reward
 
+    def __repr__(self):
+        return str(self.action_value)
+
 
 class MovingTestbed:
     def __init__(self, num_arms=10):
