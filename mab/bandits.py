@@ -1,4 +1,5 @@
 from numpy.random import normal
+from numpy import amax
 
 
 class MovingArm:
@@ -16,17 +17,26 @@ class MovingArm:
 
 class MovingTestbed:
     def __init__(self, num_arms=10):
-        self.arms = [MovingArm() for i in range(num_arms)]
+        self.arms = normal(0, 1, num_arms)
         self.optimal_plays = 0
         self.total_plays = 0
+        self.noise_gen = self._noise()
 
     def play(self, arm):
-        optimal_action_value = max([a.action_value for a in self.arms])
-        chosen_arm = self.arms[arm]
-        if chosen_arm.action_value == optimal_action_value:
+        optimal_action_value = amax(self.arms)
+        reward = self.arms[arm]
+        if reward == optimal_action_value:
             self.optimal_plays += 1
         self.total_plays += 1
-        return chosen_arm.play()
+        self.arms[arm] += next(self.noise_gen)
+        return reward
 
     def optimal_percentage(self):
         return 100 * self.optimal_plays / self.total_plays
+
+    @staticmethod
+    def _noise():
+        while True:
+            noise_batch = normal(0, 0.01, 200_000)
+            for noise in noise_batch:
+                yield noise

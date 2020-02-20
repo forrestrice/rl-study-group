@@ -1,4 +1,5 @@
 from numpy.random import random, random_integers
+from numpy import zeros, argmax
 from abc import ABC, abstractmethod
 
 
@@ -36,14 +37,14 @@ class EpsilonGreedyPlayer(Player):
         super().__init__()
         self.alpha = alpha
         self.epsilon = epsilon
-        self.arm_estimates = {i: 0 for i in range(num_arms)}
+        self.arm_estimates = zeros(num_arms)
+        self.explore_gen = self.explore_generator()
+        self.random_arm_gen = self.random_arm_generator()
 
     def choose_arm(self):
-        greedy_arm = max(self.arm_estimates, key=self.arm_estimates.get)
-        if random() < self.epsilon:
-            # random_integers draws from inclusive range. Subtract 2 to get the range of n-1 arms
-            random_index = random_integers(0, len(self.arm_estimates) - 2)
-            return random_index if random_index < greedy_arm else random_index + 1
+        greedy_arm = argmax(self.arm_estimates)
+        if next(self.explore_gen) < self.epsilon:
+            return next(self.random_arm_gen)
         else:
             return greedy_arm
 
@@ -52,3 +53,16 @@ class EpsilonGreedyPlayer(Player):
 
     def get_parameter(self):
         return self.epsilon
+
+    @staticmethod
+    def explore_generator():
+        while True:
+            randoms = random(200_000)
+            for rand in randoms:
+                yield rand
+
+    def random_arm_generator(self):
+        while True:
+            random_arms = random_integers(0, len(self.arm_estimates) - 1, 10_000)
+            for random_arm in random_arms:
+                yield random_arm
